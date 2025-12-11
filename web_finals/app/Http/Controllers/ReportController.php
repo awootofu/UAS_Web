@@ -2,13 +2,85 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Prodi;
 use App\Models\Renstra;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\View\View;
 
+/**
+ * Controller for generating reports.
+ * 
+ * Authorization is handled via route middleware in routes/web.php:
+ * - All report routes: admin, dekan, GPM roles only
+ * 
+ * @see \App\Http\Middleware\RoleMiddleware
+ */
 class ReportController extends Controller
 {
+    /**
+     * Display the Renstra report page.
+     */
+    public function renstraReport(Request $request): View
+    {
+        $query = Renstra::with(['kategori', 'kegiatan', 'indikatorRelation', 'target', 'prodi']);
+
+        // Filter by year if provided
+        if ($request->filled('tahun')) {
+            $query->byYear($request->tahun);
+        }
+
+        // Filter by prodi if provided
+        if ($request->filled('prodi')) {
+            $query->where('prodi_id', $request->prodi);
+        }
+
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $renstras = $query->orderBy('created_at', 'desc')->paginate(20);
+        $prodis = Prodi::orderBy('nama_prodi')->get();
+
+        return view('reports.renstra', compact('renstras', 'prodis'));
+    }
+
+    /**
+     * Export Renstra report as PDF.
+     */
+    public function exportPdf(Request $request)
+    {
+        $query = Renstra::with(['kategori', 'kegiatan', 'indikatorRelation', 'target', 'prodi']);
+
+        // Filter by year if provided
+        if ($request->filled('tahun')) {
+            $query->byYear($request->tahun);
+        }
+
+        // Filter by prodi if provided
+        if ($request->filled('prodi')) {
+            $query->where('prodi_id', $request->prodi);
+        }
+
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $renstras = $query->get()->groupBy('kategori.nama_kategori');
+
+        $pdf = Pdf::loadView('reports.renstra-summary-pdf', [
+            'renstras' => $renstras,
+            'tahun' => $request->tahun ?? 'Semua Tahun',
+        ]);
+        
+        $pdf->setPaper('A4', 'landscape');
+        
+        return $pdf->download('Renstra_Report_' . date('Ymd') . '.pdf');
+    }
+
     /**
      * Generate PDF report for a Renstra.
      */

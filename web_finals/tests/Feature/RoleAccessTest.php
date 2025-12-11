@@ -39,12 +39,12 @@ class RoleAccessTest extends TestCase
         ]);
 
         // Create users with different roles
-        $this->adminUser = User::factory()->create(['role' => 'admin']);
-        $this->dekanUser = User::factory()->create(['role' => 'dekan']);
-        $this->gpmUser = User::factory()->create(['role' => 'gpm']);
-        $this->gkmUser = User::factory()->create(['role' => 'gkm', 'prodi_id' => $this->prodi->id]);
-        $this->kaprodiUser = User::factory()->create(['role' => 'kaprodi', 'prodi_id' => $this->prodi->id]);
-        $this->bpapUser = User::factory()->create(['role' => 'bpap']);
+        $this->adminUser = User::factory()->create(['role' => 'admin', 'is_active' => true]);
+        $this->dekanUser = User::factory()->create(['role' => 'dekan', 'is_active' => true]);
+        $this->gpmUser = User::factory()->create(['role' => 'GPM', 'is_active' => true]);
+        $this->gkmUser = User::factory()->create(['role' => 'GKM', 'prodi_id' => $this->prodi->id, 'is_active' => true]);
+        $this->kaprodiUser = User::factory()->create(['role' => 'kaprodi', 'prodi_id' => $this->prodi->id, 'is_active' => true]);
+        $this->bpapUser = User::factory()->create(['role' => 'BPAP', 'is_active' => true]);
     }
 
     /** @test */

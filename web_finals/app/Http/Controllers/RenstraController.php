@@ -13,13 +13,18 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 
+/**
+ * Controller for managing Renstra (Strategic Plan) resources.
+ * 
+ * Authorization is handled via route middleware in routes/web.php:
+ * - View routes (index, show): All authenticated users
+ * - Management routes (create, store, edit, update, destroy): admin, BPAP roles only
+ * 
+ * @see \App\Http\Middleware\RoleMiddleware
+ * @see \App\Policies\RenstraPolicy
+ */
 class RenstraController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('role:admin,BPAP')->except(['index', 'show']);
-    }
-
     /**
      * Display a listing of renstra items.
      */

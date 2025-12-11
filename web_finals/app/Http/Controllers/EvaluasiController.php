@@ -13,14 +13,19 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
+/**
+ * Controller for managing Evaluasi (Evaluation) resources.
+ * 
+ * Authorization is handled via route middleware in routes/web.php:
+ * - View routes (index, show): All authenticated users (prodi-filtered)
+ * - Management routes (create, store, edit, update): admin, kaprodi, GPM, dekan
+ * - Verification routes (approve, reject): admin, GPM, dekan
+ * 
+ * @see \App\Http\Middleware\RoleMiddleware
+ * @see \App\Policies\EvaluasiPolicy
+ */
 class EvaluasiController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('role:admin,kaprodi')->only(['create', 'store', 'edit', 'update']);
-        $this->middleware('role:admin,GPM,dekan')->only(['verify', 'approve', 'reject']);
-    }
-
     /**
      * Display a listing of evaluasi.
      */
@@ -75,7 +80,13 @@ class EvaluasiController extends Controller
             ->get();
 
         $targets = RenstraTarget::with('indikator')->get();
-        $prodis = $user->isAdmin() ? Prodi::orderBy('nama_prodi')->get() : collect([$user->prodi]);
+        
+        // For admin, get all prodis. For others, only their prodi (if assigned)
+        if ($user->isAdmin()) {
+            $prodis = Prodi::orderBy('nama_prodi')->get();
+        } else {
+            $prodis = $user->prodi_id ? collect([$user->prodi]) : Prodi::orderBy('nama_prodi')->get();
+        }
 
         return view('evaluasi.create', compact('renstras', 'targets', 'prodis'));
     }

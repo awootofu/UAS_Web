@@ -131,10 +131,12 @@ class User extends Authenticatable
 
     public function hasRole(string|array $roles): bool
     {
+        // Case-insensitive role comparison
         if (is_string($roles)) {
-            return $this->role === $roles;
+            return strtolower($this->role) === strtolower($roles);
         }
-        return in_array($this->role, $roles);
+        $normalizedRoles = array_map('strtolower', $roles);
+        return in_array(strtolower($this->role), $normalizedRoles);
     }
 
     public function canVerify(): bool

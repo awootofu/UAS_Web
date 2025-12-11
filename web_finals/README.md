@@ -136,9 +136,157 @@ php artisan test
 Run specific test files:
 
 ```bash
+php artisan test --filter=RoleMiddlewareTest
+php artisan test --filter=PolicyTest
 php artisan test --filter=RoleAccessTest
 php artisan test --filter=RTLTest
 php artisan test --filter=EvaluasiTest
+```
+
+## Role-Based Access Control (RBAC)
+
+This system implements comprehensive RBAC using Laravel's middleware and policies.
+
+### Roles Overview
+
+| Role | Description | Prodi-Bound |
+|------|-------------|-------------|
+| `admin` | System administrator with full access | No |
+| `dekan` | Faculty dean, approves evaluations, views reports | No |
+| `GPM` | Quality assurance team, reviews evaluations, verifies RTL | No |
+| `GKM` | Quality control per prodi, creates and manages RTL | Yes |
+| `kaprodi` | Program head, creates evaluations for their prodi | Yes |
+| `BPAP` | Planning bureau, manages Renstra master data | No |
+
+### Using the Role Middleware
+
+The `RoleMiddleware` is registered as `role` in `bootstrap/app.php`. Use it to protect routes:
+
+```php
+// Single role
+Route::get('/users', [UserController::class, 'index'])
+    ->middleware('role:admin');
+
+// Multiple roles (OR logic - any of these roles can access)
+Route::get('/evaluasi/create', [EvaluasiController::class, 'create'])
+    ->middleware('role:admin,kaprodi,gpm,dekan');
+
+// In route groups
+Route::middleware(['auth', 'role:admin,bpap'])->group(function () {
+    Route::resource('renstra', RenstraController::class)->except(['index', 'show']);
+});
+```
+
+### Using Policies
+
+Policies provide fine-grained authorization at the model level:
+
+```php
+// In controllers - using authorize()
+public function update(Request $request, Evaluasi $evaluasi)
+{
+    $this->authorize('update', $evaluasi);
+    // ... update logic
+}
+
+// In controllers - using Gate facade
+use Illuminate\Support\Facades\Gate;
+
+if (Gate::allows('update', $evaluasi)) {
+    // User can update
+}
+
+// In Blade templates
+@can('create', App\Models\Renstra::class)
+    <a href="{{ route('renstra.create') }}">Create Renstra</a>
+@endcan
+
+@can('update', $evaluasi)
+    <a href="{{ route('evaluasi.edit', $evaluasi) }}">Edit</a>
+@endcan
+```
+
+### Policy Rules Summary
+
+#### RenstraPolicy
+| Action | admin | dekan | GPM | GKM | kaprodi | BPAP |
+|--------|-------|-------|-----|-----|---------|------|
+| viewAny | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| view | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| create | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| update | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| delete | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ |
+
+#### EvaluasiPolicy
+| Action | admin | dekan | GPM | GKM | kaprodi | BPAP |
+|--------|-------|-------|-----|-----|---------|------|
+| viewAny | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| view | ✅ | ✅ | ✅ | Own Prodi | Own Prodi | ❌ |
+| create | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ |
+| update | ✅ | ❌ | ❌ | ❌ | Own Prodi | ❌ |
+| verify | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
+
+#### RTLPolicy
+| Action | admin | dekan | GPM | GKM | kaprodi | BPAP |
+|--------|-------|-------|-----|-----|---------|------|
+| viewAny | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| view | ✅ | ✅ | ✅ | Own Prodi | Own Prodi | ❌ |
+| create | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ |
+| update | ✅ | ❌ | ❌ | Own Prodi | ❌ | ❌ |
+| verify | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
+
+### Seeding Roles
+
+Run the seeder to create sample users for each role:
+
+```bash
+# Seed only roles
+php artisan db:seed --class=RoleSeeder
+
+# Full database seed (includes roles)
+php artisan migrate:fresh --seed
+```
+
+### Checking Roles in Code
+
+```php
+// Using User model methods
+$user->isAdmin();     // true if role is 'admin'
+$user->isDekan();     // true if role is 'dekan'
+$user->isGPM();       // true if role is 'GPM'
+$user->isGKM();       // true if role is 'GKM'
+$user->isKaprodi();   // true if role is 'kaprodi'
+$user->isBPAP();      // true if role is 'BPAP'
+
+// Check single role
+$user->hasRole('admin');
+
+// Check multiple roles (OR logic)
+$user->hasRole(['admin', 'GPM', 'dekan']);
+
+// Using role constants
+use App\Models\User;
+$user->hasRole([User::ROLE_ADMIN, User::ROLE_GPM]);
+```
+
+### Defined Gates
+
+Gates are registered in `AppServiceProvider` for quick authorization checks:
+
+```php
+// Check if user can manage users
+Gate::allows('manage-users');
+
+// Check if user can manage renstra
+Gate::allows('manage-renstra');
+
+// Check if user can verify evaluations
+Gate::allows('verify-evaluasi');
+
+// In Blade
+@can('manage-users')
+    <a href="/users">Manage Users</a>
+@endcan
 ```
 
 ## Project Structure

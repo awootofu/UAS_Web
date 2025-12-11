@@ -15,7 +15,7 @@ Route::get('/', function () {
 
 // Dashboard
 Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware(['auth', 'verified'])
+    ->middleware(['auth', 'verified', 'role'])
     ->name('dashboard');
 
 // Profile routes
@@ -28,6 +28,15 @@ Route::middleware('auth')->group(function () {
 // Renstra routes - accessible by admin, bpap
 Route::middleware(['auth', 'role:admin,bpap'])->group(function () {
     Route::resource('renstra', RenstraController::class)->except(['index', 'show']);
+    
+    // Master data routes for Renstra (admin/BPAP only)
+    // These use existing methods in RenstraController that render /renstra/kategori/index etc.
+    Route::prefix('renstra')->name('renstra.')->group(function () {
+        Route::get('/kategori', [RenstraController::class, 'kategoriIndex'])->name('kategori.index');
+        Route::get('/kegiatan', [RenstraController::class, 'kegiatanIndex'])->name('kegiatan.index');
+        Route::get('/indikator', [RenstraController::class, 'indikatorIndex'])->name('indikator.index');
+        Route::get('/target', [RenstraController::class, 'targetIndex'])->name('target.index');
+    });
 });
 
 // Renstra view routes - accessible by all authenticated users

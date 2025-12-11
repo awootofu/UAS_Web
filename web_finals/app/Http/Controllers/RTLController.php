@@ -11,14 +11,19 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
+/**
+ * Controller for managing RTL (Rencana Tindak Lanjut / Follow-up Plan) resources.
+ * 
+ * Authorization is handled via route middleware in routes/web.php:
+ * - View routes (index, show): All authenticated users (prodi-filtered)
+ * - Management routes (create, store, edit, update, complete): admin, GKM
+ * - Verification routes (verify): admin, GPM, dekan
+ * 
+ * @see \App\Http\Middleware\RoleMiddleware
+ * @see \App\Policies\RTLPolicy
+ */
 class RTLController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('role:admin,GKM')->only(['create', 'store', 'edit', 'update', 'complete']);
-        $this->middleware('role:admin,GPM,dekan')->only(['verify']);
-    }
-
     /**
      * Display a listing of RTLs.
      */

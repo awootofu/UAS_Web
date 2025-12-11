@@ -11,13 +11,16 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 
+/**
+ * Controller for managing User resources (Admin only).
+ * 
+ * Authorization is handled via route middleware in routes/web.php:
+ * - All routes: admin role only
+ * 
+ * @see \App\Http\Middleware\RoleMiddleware
+ */
 class UserController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('role:admin');
-    }
-
     /**
      * Display a listing of users.
      */
