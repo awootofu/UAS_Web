@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Prodi extends Model
@@ -17,9 +18,15 @@ class Prodi extends Model
         'nama_prodi',
         'kode_prodi',
         'fakultas',
+        'fakultas_id',
         'jenjang',
         'deskripsi',
     ];
+
+    public function fakultasRelation(): BelongsTo
+    {
+        return $this->belongsTo(Fakultas::class, 'fakultas_id');
+    }
 
     public function users(): HasMany
     {

@@ -30,7 +30,17 @@ class RenstraController extends Controller
      */
     public function index(Request $request): View
     {
+        $user = auth()->user();
         $query = Renstra::with(['kategori', 'kegiatan', 'indikatorRelation', 'target', 'prodi', 'user']);
+
+        // Filter by accessible prodi based on user role
+        $accessibleProdiIds = $user->getAccessibleProdiIds();
+        if (!$user->isAdmin() && !$user->isBPAP()) {
+            $query->where(function ($q) use ($accessibleProdiIds) {
+                $q->whereIn('prodi_id', $accessibleProdiIds)
+                  ->orWhereNull('prodi_id'); // Include university-wide renstra
+            });
+        }
 
         // Filter by kategori
         if ($request->filled('kategori')) {
@@ -47,9 +57,9 @@ class RenstraController extends Controller
             $query->where('status', $request->status);
         }
 
-        // Filter by year
-        if ($request->filled('tahun')) {
-            $query->byYear($request->tahun);
+        // Filter by periode
+        if ($request->filled('periode')) {
+            $query->byPeriode($request->periode);
         }
 
         // Search
@@ -63,22 +73,27 @@ class RenstraController extends Controller
 
         $renstras = $query->latest()->paginate(15);
         $kategoris = RenstraKategori::orderBy('urutan')->get();
-        $prodis = Prodi::orderBy('nama_prodi')->get();
+        
+        // Only show accessible prodis in filter dropdown
+        $prodis = Prodi::whereIn('id', $accessibleProdiIds)->orderBy('nama_prodi')->get();
 
         return view('renstra.index', compact('renstras', 'kategoris', 'prodis'));
     }
 
     /**
      * Show the form for creating a new renstra.
+     * Only admin and BPAP can create renstra.
      */
     public function create(): View
     {
-        $kategoris = RenstraKategori::orderBy('urutan')->get();
-        $kegiatans = RenstraKegiatan::with('kategori')->orderBy('urutan')->get();
-        $indikators = RenstraIndikator::with('kegiatan')->orderBy('urutan')->get();
-        $prodis = Prodi::orderBy('nama_prodi')->get();
+        $user = auth()->user();
+        
+        // Get accessible prodis based on user role
+        $accessibleProdiIds = $user->getAccessibleProdiIds();
+        $prodis = Prodi::whereIn('id', $accessibleProdiIds)->orderBy('nama_prodi')->get();
+        $periodes = Renstra::getPeriodeOptions();
 
-        return view('renstra.create', compact('kategoris', 'kegiatans', 'indikators', 'prodis'));
+        return view('renstra.create', compact('prodis', 'periodes'));
     }
 
     /**
@@ -87,15 +102,12 @@ class RenstraController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'kode_renstra' => 'required|string|max:50|unique:renstra,kode_renstra',
             'indikator' => 'required|string',
-            'kategori_id' => 'required|exists:renstra_kategori,id',
-            'kegiatan_id' => 'required|exists:renstra_kegiatan,id',
-            'indikator_id' => 'required|exists:renstra_indikator,id',
-            'target_id' => 'nullable|exists:renstra_target,id',
+            'indikator_value' => 'required|numeric|min:0',
+            'kategori' => 'required|string|max:255',
+            'kegiatan' => 'required|string|max:255',
             'prodi_id' => 'nullable|exists:prodi,id',
-            'tahun_awal' => 'required|integer|min:2020|max:2050',
-            'tahun_akhir' => 'required|integer|min:2020|max:2050|gte:tahun_awal',
+            'periode' => 'required|string',
             'status' => 'required|in:draft,active,completed,archived',
             'keterangan' => 'nullable|string',
         ]);
@@ -115,6 +127,15 @@ class RenstraController extends Controller
      */
     public function show(Renstra $renstra): View
     {
+        $user = auth()->user();
+        
+        // Check if user can access this renstra's prodi
+        if (!$user->isAdmin() && !$user->isBPAP() && $renstra->prodi_id) {
+            if (!$user->canAccessProdi($renstra->prodi_id)) {
+                abort(403, 'Anda tidak memiliki akses ke renstra ini.');
+            }
+        }
+        
         $renstra->load(['kategori', 'kegiatan', 'indikatorRelation', 'target', 'prodi', 'user', 'evaluasis']);
 
         return view('renstra.show', compact('renstra'));
@@ -125,13 +146,14 @@ class RenstraController extends Controller
      */
     public function edit(Renstra $renstra): View
     {
-        $kategoris = RenstraKategori::orderBy('urutan')->get();
-        $kegiatans = RenstraKegiatan::with('kategori')->orderBy('urutan')->get();
-        $indikators = RenstraIndikator::with('kegiatan')->orderBy('urutan')->get();
-        $targets = RenstraTarget::where('indikator_id', $renstra->indikator_id)->get();
-        $prodis = Prodi::orderBy('nama_prodi')->get();
+        $user = auth()->user();
+        
+        // Get accessible prodis based on user role
+        $accessibleProdiIds = $user->getAccessibleProdiIds();
+        $prodis = Prodi::whereIn('id', $accessibleProdiIds)->orderBy('nama_prodi')->get();
+        $periodes = Renstra::getPeriodeOptions();
 
-        return view('renstra.edit', compact('renstra', 'kategoris', 'kegiatans', 'indikators', 'targets', 'prodis'));
+        return view('renstra.edit', compact('renstra', 'prodis', 'periodes'));
     }
 
     /**
@@ -140,15 +162,12 @@ class RenstraController extends Controller
     public function update(Request $request, Renstra $renstra): RedirectResponse
     {
         $validated = $request->validate([
-            'kode_renstra' => 'required|string|max:50|unique:renstra,kode_renstra,' . $renstra->id,
             'indikator' => 'required|string',
-            'kategori_id' => 'required|exists:renstra_kategori,id',
-            'kegiatan_id' => 'required|exists:renstra_kegiatan,id',
-            'indikator_id' => 'required|exists:renstra_indikator,id',
-            'target_id' => 'nullable|exists:renstra_target,id',
+            'indikator_value' => 'required|numeric|min:0',
+            'kategori' => 'required|string|max:255',
+            'kegiatan' => 'required|string|max:255',
             'prodi_id' => 'nullable|exists:prodi,id',
-            'tahun_awal' => 'required|integer|min:2020|max:2050',
-            'tahun_akhir' => 'required|integer|min:2020|max:2050|gte:tahun_awal',
+            'periode' => 'required|string',
             'status' => 'required|in:draft,active,completed,archived',
             'keterangan' => 'nullable|string',
         ]);

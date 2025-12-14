@@ -8,6 +8,8 @@ use App\Models\EvaluasiBukti;
 use App\Models\Prodi;
 use App\Models\Renstra;
 use App\Models\RenstraTarget;
+use App\Http\Requests\StoreEvaluasiRequest;
+use App\Http\Requests\UpdateEvaluasiRequest;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
@@ -35,9 +37,10 @@ class EvaluasiController extends Controller
         
         $query = Evaluasi::with(['renstra', 'prodi', 'target', 'creator', 'bukti']);
 
-        // Role-based filtering
-        if ($user->isKaprodi() || $user->isGKM()) {
-            $query->where('prodi_id', $user->prodi_id);
+        // Role-based filtering based on accessible prodi
+        $accessibleProdiIds = $user->getAccessibleProdiIds();
+        if (!$user->isAdmin()) {
+            $query->whereIn('prodi_id', $accessibleProdiIds);
         }
 
         // Filter by status
@@ -46,8 +49,11 @@ class EvaluasiController extends Controller
         }
 
         // Filter by prodi
-        if ($request->filled('prodi') && ($user->isAdmin() || $user->isDekan() || $user->isGPM())) {
-            $query->where('prodi_id', $request->prodi);
+        if ($request->filled('prodi')) {
+            // Ensure user can only filter by accessible prodi
+            if (in_array($request->prodi, $accessibleProdiIds) || $user->isAdmin()) {
+                $query->where('prodi_id', $request->prodi);
+            }
         }
 
         // Filter by semester
@@ -61,32 +67,35 @@ class EvaluasiController extends Controller
         }
 
         $evaluasis = $query->latest()->paginate(15);
-        $prodis = Prodi::orderBy('nama_prodi')->get();
+        
+        // Only show accessible prodis in filter dropdown
+        $prodis = Prodi::whereIn('id', $accessibleProdiIds)->orderBy('nama_prodi')->get();
 
         return view('evaluasi.index', compact('evaluasis', 'prodis'));
     }
 
     /**
      * Show the form for creating a new evaluasi.
+     * Only kaprodi can create evaluasi for their prodi.
      */
     public function create(Request $request): View
     {
         $user = $request->user();
+        $accessibleProdiIds = $user->getAccessibleProdiIds();
         
-        // Get available renstra items
+        // Get available renstra items for accessible prodis
         $renstras = Renstra::active()
-            ->when($user->prodi_id, fn($q) => $q->where('prodi_id', $user->prodi_id))
+            ->where(function($q) use ($accessibleProdiIds) {
+                $q->whereIn('prodi_id', $accessibleProdiIds)
+                  ->orWhereNull('prodi_id');
+            })
             ->with(['kategori', 'kegiatan', 'indikatorRelation'])
             ->get();
 
         $targets = RenstraTarget::with('indikator')->get();
         
-        // For admin, get all prodis. For others, only their prodi (if assigned)
-        if ($user->isAdmin()) {
-            $prodis = Prodi::orderBy('nama_prodi')->get();
-        } else {
-            $prodis = $user->prodi_id ? collect([$user->prodi]) : Prodi::orderBy('nama_prodi')->get();
-        }
+        // Get accessible prodis
+        $prodis = Prodi::whereIn('id', $accessibleProdiIds)->orderBy('nama_prodi')->get();
 
         return view('evaluasi.create', compact('renstras', 'targets', 'prodis'));
     }
@@ -94,32 +103,12 @@ class EvaluasiController extends Controller
     /**
      * Store a newly created evaluasi.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(StoreEvaluasiRequest $request): RedirectResponse
     {
         $user = $request->user();
         
-        $validated = $request->validate([
-            'renstra_id' => 'required|exists:renstra,id',
-            'prodi_id' => 'required|exists:prodi,id',
-            'target_id' => 'required|exists:renstra_target,id',
-            'semester' => 'required|in:ganjil,genap',
-            'tahun_evaluasi' => 'required|integer|min:2020|max:2050',
-            'realisasi' => 'required|numeric|min:0',
-            'ketercapaian' => 'required|numeric|min:0|max:200',
-            'akar_masalah' => 'nullable|string',
-            'faktor_pendukung' => 'nullable|string',
-            'faktor_penghambat' => 'nullable|string',
-            'bukti_file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,zip|max:10240',
-        ]);
-
-        // Validate based on ketercapaian
-        // TODO: Add conditional validation - if ketercapaian < 100, require akar_masalah and faktor_penghambat
-        if ($validated['ketercapaian'] < 100) {
-            $request->validate([
-                'akar_masalah' => 'required|string',
-                'faktor_penghambat' => 'required|string',
-            ]);
-        }
+        // Request already validated with conditional logic
+        $validated = $request->validated();
 
         // Handle file upload
         $buktiId = null;
@@ -138,7 +127,7 @@ class EvaluasiController extends Controller
             $buktiId = $bukti->id;
         }
 
-        // Restrict prodi for non-admin
+        // Restrict prodi for non-admin (already handled in prepareForValidation)
         if (!$user->isAdmin() && $user->prodi_id) {
             $validated['prodi_id'] = $user->prodi_id;
         }
@@ -146,7 +135,7 @@ class EvaluasiController extends Controller
         $evaluasi = Evaluasi::create([
             'renstra_id' => $validated['renstra_id'],
             'prodi_id' => $validated['prodi_id'],
-            'target_id' => $validated['target_id'],
+            'target_id' => $validated['target_id'] ?? null,
             'bukti_id' => $buktiId,
             'created_by' => $user->id,
             'semester' => $validated['semester'],
@@ -200,22 +189,12 @@ class EvaluasiController extends Controller
     /**
      * Update the specified evaluasi.
      */
-    public function update(Request $request, Evaluasi $evaluasi): RedirectResponse
+    public function update(UpdateEvaluasiRequest $request, Evaluasi $evaluasi): RedirectResponse
     {
-        $this->authorize('update', $evaluasi);
+        // Authorization is handled in UpdateEvaluasiRequest
         
-        $validated = $request->validate([
-            'renstra_id' => 'required|exists:renstra,id',
-            'target_id' => 'required|exists:renstra_target,id',
-            'semester' => 'required|in:ganjil,genap',
-            'tahun_evaluasi' => 'required|integer|min:2020|max:2050',
-            'realisasi' => 'required|numeric|min:0',
-            'ketercapaian' => 'required|numeric|min:0|max:200',
-            'akar_masalah' => 'nullable|string',
-            'faktor_pendukung' => 'nullable|string',
-            'faktor_penghambat' => 'nullable|string',
-            'bukti_file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,zip|max:10240',
-        ]);
+        // Request already validated with conditional logic
+        $validated = $request->validated();
 
         // Handle new file upload
         if ($request->hasFile('bukti_file')) {

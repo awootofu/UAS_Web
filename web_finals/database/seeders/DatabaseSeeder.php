@@ -31,6 +31,7 @@ class DatabaseSeeder extends Seeder
         // Run seeders in order (dependencies first)
         $this->call([
             JabatanSeeder::class,
+            FakultasSeeder::class,  // Must run before ProdiSeeder
             ProdiSeeder::class,
             RoleSeeder::class,      // Creates users for each role
             RenstraSeeder::class,
@@ -40,11 +41,22 @@ class DatabaseSeeder extends Seeder
         $this->command->info('🎉 Database seeded successfully!');
         $this->command->info('');
         $this->command->info('Login credentials (all passwords: "password"):');
-        $this->command->info('  admin@renstra.test    - Full system access');
-        $this->command->info('  dekan@renstra.test    - View reports, approve evaluations');
-        $this->command->info('  gpm@renstra.test      - Review evaluations, verify RTL');
-        $this->command->info('  gkm@renstra.test      - Create RTL for prodi');
-        $this->command->info('  kaprodi@renstra.test  - Create evaluations for prodi');
-        $this->command->info('  bpap@renstra.test     - Manage renstra data');
+        $this->command->info('  admin@renstra.test        - Full system access');
+        $this->command->info('');
+        $this->command->info('  Dekan per Fakultas:');
+        $this->command->info('  dekan.fskom@renstra.test  - Dekan FSKoM (FM, IF, DS)');
+        $this->command->info('  dekan.fbpar@renstra.test  - Dekan FBPAR (MB, PWS, AKT)');
+        $this->command->info('  dekan.fdkka@renstra.test  - Dekan FDKKA (K3, DKV, ARS)');
+        $this->command->info('');
+        $this->command->info('  GPM & GKM (per fakultas):');
+        $this->command->info('  gpm.fskom@renstra.test    - GPM FSKoM');
+        $this->command->info('  gkm.fskom@renstra.test    - GKM FSKoM');
+        $this->command->info('');
+        $this->command->info('  Kaprodi (per prodi):');
+        $this->command->info('  kaprodi.if@renstra.test   - Kaprodi Informatika');
+        $this->command->info('  kaprodi.fm@renstra.test   - Kaprodi Fisika Medis');
+        $this->command->info('  (dan lainnya...)');
+        $this->command->info('');
+        $this->command->info('  bpap@renstra.test         - BPAP (manage renstra)');
     }
 }

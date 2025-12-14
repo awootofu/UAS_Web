@@ -12,36 +12,58 @@
 
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                    {{-- Dashboard - Semua role bisa akses --}}
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
 
+                    {{-- Renstra - admin, dekan, GPM, GKM, kaprodi, BPAP bisa akses --}}
+                    @if(auth()->user()->hasRole(['admin', 'dekan', 'GPM', 'GKM', 'kaprodi', 'BPAP']))
                     <x-nav-link :href="route('renstra.index')" :active="request()->routeIs('renstra.*')">
                         {{ __('Renstra') }}
                     </x-nav-link>
+                    @endif
 
+                    {{-- Evaluasi - admin, dekan, GPM, GKM, kaprodi bisa akses --}}
+                    @if(auth()->user()->hasRole(['admin', 'dekan', 'GPM', 'GKM', 'kaprodi']))
                     <x-nav-link :href="route('evaluasi.index')" :active="request()->routeIs('evaluasi.*')">
                         {{ __('Evaluasi') }}
                     </x-nav-link>
+                    @endif
 
+                    {{-- RTL - admin, dekan, GPM, GKM bisa akses --}}
+                    @if(auth()->user()->hasRole(['admin', 'dekan', 'GPM', 'GKM']))
                     <x-nav-link :href="route('rtl.index')" :active="request()->routeIs('rtl.*')">
                         {{ __('RTL') }}
                     </x-nav-link>
+                    @endif
 
-                    @can('manage-users')
+                    {{-- Users - hanya admin --}}
+                    @if(auth()->user()->isAdmin())
                     <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
                         {{ __('Users') }}
                     </x-nav-link>
-                    @endcan
+                    @endif
                 </div>
             </div>
 
             <!-- Settings Dropdown -->
             <div class="hidden sm:flex sm:items-center sm:ms-6">
                 <!-- Role Badge -->
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 mr-4">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 mr-2">
                     {{ Auth::user()->role }}
                 </span>
+                
+                {{-- Fakultas/Prodi Badge --}}
+                @if(Auth::user()->fakultas)
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mr-4">
+                    {{ Auth::user()->fakultas->kode_fakultas }}
+                </span>
+                @elseif(Auth::user()->prodi)
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-4">
+                    {{ Auth::user()->prodi->kode_prodi }}
+                </span>
+                @endif
 
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
@@ -93,6 +115,30 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
+
+            @if(auth()->user()->hasRole(['admin', 'dekan', 'GPM', 'GKM', 'kaprodi', 'BPAP']))
+            <x-responsive-nav-link :href="route('renstra.index')" :active="request()->routeIs('renstra.*')">
+                {{ __('Renstra') }}
+            </x-responsive-nav-link>
+            @endif
+
+            @if(auth()->user()->hasRole(['admin', 'dekan', 'GPM', 'GKM', 'kaprodi']))
+            <x-responsive-nav-link :href="route('evaluasi.index')" :active="request()->routeIs('evaluasi.*')">
+                {{ __('Evaluasi') }}
+            </x-responsive-nav-link>
+            @endif
+
+            @if(auth()->user()->hasRole(['admin', 'dekan', 'GPM', 'GKM']))
+            <x-responsive-nav-link :href="route('rtl.index')" :active="request()->routeIs('rtl.*')">
+                {{ __('RTL') }}
+            </x-responsive-nav-link>
+            @endif
+
+            @if(auth()->user()->isAdmin())
+            <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
+                {{ __('Users') }}
+            </x-responsive-nav-link>
+            @endif
         </div>
 
         <!-- Responsive Settings Options -->

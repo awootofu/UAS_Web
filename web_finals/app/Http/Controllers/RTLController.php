@@ -33,9 +33,10 @@ class RTLController extends Controller
         
         $query = RTL::with(['evaluasi.renstra', 'prodi', 'user', 'verifier']);
 
-        // Role-based filtering
-        if ($user->isGKM() || $user->isKaprodi()) {
-            $query->where('prodi_id', $user->prodi_id);
+        // Role-based filtering based on accessible prodi
+        $accessibleProdiIds = $user->getAccessibleProdiIds();
+        if (!$user->isAdmin()) {
+            $query->whereIn('prodi_id', $accessibleProdiIds);
         }
 
         // Filter by status
@@ -44,8 +45,11 @@ class RTLController extends Controller
         }
 
         // Filter by prodi
-        if ($request->filled('prodi') && ($user->isAdmin() || $user->isDekan() || $user->isGPM())) {
-            $query->where('prodi_id', $request->prodi);
+        if ($request->filled('prodi')) {
+            // Ensure user can only filter by accessible prodi
+            if (in_array($request->prodi, $accessibleProdiIds) || $user->isAdmin()) {
+                $query->where('prodi_id', $request->prodi);
+            }
         }
 
         // Filter overdue
@@ -55,7 +59,9 @@ class RTLController extends Controller
         }
 
         $rtls = $query->latest()->paginate(15);
-        $prodis = Prodi::orderBy('nama_prodi')->get();
+        
+        // Only show accessible prodis in filter dropdown
+        $prodis = Prodi::whereIn('id', $accessibleProdiIds)->orderBy('nama_prodi')->get();
 
         return view('rtl.index', compact('rtls', 'prodis'));
     }
@@ -66,15 +72,16 @@ class RTLController extends Controller
     public function create(Request $request): View
     {
         $user = $request->user();
+        $accessibleProdiIds = $user->getAccessibleProdiIds();
         
-        // Get evaluations that need RTL (failed to meet target)
+        // Get evaluations that need RTL (failed to meet target) for accessible prodis
         $evaluasis = Evaluasi::with(['renstra', 'prodi'])
-            ->when($user->prodi_id, fn($q) => $q->where('prodi_id', $user->prodi_id))
+            ->whereIn('prodi_id', $accessibleProdiIds)
             ->where('ketercapaian', '<', 100)
             ->whereIn('status', ['verified', 'approved'])
             ->get();
 
-        $prodis = $user->isAdmin() ? Prodi::orderBy('nama_prodi')->get() : collect([$user->prodi]);
+        $prodis = Prodi::whereIn('id', $accessibleProdiIds)->orderBy('nama_prodi')->get();
 
         return view('rtl.create', compact('evaluasis', 'prodis'));
     }

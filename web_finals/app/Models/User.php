@@ -42,6 +42,7 @@ class User extends Authenticatable
         'password',
         'role',
         'prodi_id',
+        'fakultas_id',
         'jabatan_id',
         'nip',
         'phone',
@@ -76,6 +77,11 @@ class User extends Authenticatable
     public function prodi(): BelongsTo
     {
         return $this->belongsTo(Prodi::class);
+    }
+
+    public function fakultas(): BelongsTo
+    {
+        return $this->belongsTo(Fakultas::class);
     }
 
     public function jabatan(): BelongsTo
@@ -147,5 +153,65 @@ class User extends Authenticatable
     public function canApprove(): bool
     {
         return $this->hasRole([self::ROLE_DEKAN, self::ROLE_ADMIN]);
+    }
+
+    /**
+     * Get the prodi IDs that this user can access
+     * - Admin: All prodis
+     * - BPAP: All prodis
+     * - GPM: All prodis (no fakultas restriction)
+     * - Dekan: Prodis in their fakultas
+     * - GKM: Only their own prodi (like Kaprodi)
+     * - Kaprodi: Only their own prodi
+     */
+    public function getAccessibleProdiIds(): array
+    {
+        if ($this->isAdmin() || $this->isBPAP() || $this->isGPM()) {
+            return Prodi::pluck('id')->toArray();
+        }
+
+        if ($this->isDekan() && $this->fakultas_id) {
+            return Prodi::where('fakultas_id', $this->fakultas_id)->pluck('id')->toArray();
+        }
+
+        // GKM and Kaprodi can only see their own prodi
+        if (($this->isGKM() || $this->isKaprodi()) && $this->prodi_id) {
+            return [$this->prodi_id];
+        }
+
+        return [];
+    }
+
+    /**
+     * Check if user can access a specific prodi
+     */
+    public function canAccessProdi($prodiId): bool
+    {
+        if ($this->isAdmin() || $this->isBPAP()) {
+            return true;
+        }
+
+        return in_array($prodiId, $this->getAccessibleProdiIds());
+    }
+
+    /**
+     * Get the fakultas IDs that this user can access
+     */
+    public function getAccessibleFakultasIds(): array
+    {
+        if ($this->isAdmin() || $this->isBPAP()) {
+            return Fakultas::pluck('id')->toArray();
+        }
+
+        if ($this->fakultas_id) {
+            return [$this->fakultas_id];
+        }
+
+        if ($this->prodi_id) {
+            $prodi = Prodi::find($this->prodi_id);
+            return $prodi && $prodi->fakultas_id ? [$prodi->fakultas_id] : [];
+        }
+
+        return [];
     }
 }
