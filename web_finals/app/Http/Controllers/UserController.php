@@ -13,10 +13,7 @@ use Illuminate\View\View;
 
 class UserController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('role:admin');
-    }
+   
 
     /**
      * Display a listing of users.

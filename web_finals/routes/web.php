@@ -9,6 +9,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
 
+
 Route::get('/', function () {
     return view('welcome');
 });
@@ -77,5 +78,22 @@ Route::middleware(['auth', 'role:admin,dekan,gpm'])->group(function () {
     Route::get('/reports/renstra', [ReportController::class, 'renstraReport'])->name('reports.renstra');
     Route::get('/reports/renstra/pdf', [ReportController::class, 'exportPdf'])->name('reports.renstra.pdf');
 });
+
+Route::prefix('renstra')->name('renstra.')->middleware(['auth'])->group(function () {
+    // ... route kategori, kegiatan, indikator ...
+    Route::resource('kategori', \App\Http\Controllers\KategoriController::class)->except(['show', 'edit', 'update']);
+    Route::resource('kegiatan', \App\Http\Controllers\KegiatanController::class)->except(['show', 'edit', 'update']);
+    Route::resource('indikator', \App\Http\Controllers\IndikatorController::class)->except(['show', 'edit', 'update']);
+    
+    // TAMBAHKAN INI: Route Target
+    Route::resource('target', \App\Http\Controllers\TargetController::class)->except(['show', 'edit', 'update']);
+});
+
+    // --- TAMBAHKAN INI (Custom Routes Evaluasi) ---
+    Route::post('/evaluasi/{evaluasi}/submit', [EvaluasiController::class, 'submit'])->name('evaluasi.submit');
+    Route::patch('/evaluasi/{evaluasi}/verify', [EvaluasiController::class, 'verify'])->name('evaluasi.verify');
+    Route::patch('/evaluasi/{evaluasi}/approve', [EvaluasiController::class, 'approve'])->name('evaluasi.approve');
+    Route::patch('/evaluasi/{evaluasi}/reject', [EvaluasiController::class, 'reject'])->name('evaluasi.reject');
+    Route::resource('evaluasi', EvaluasiController::class);
 
 require __DIR__.'/auth.php';
