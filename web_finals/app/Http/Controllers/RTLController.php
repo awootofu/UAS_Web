@@ -13,11 +13,7 @@ use Illuminate\View\View;
 
 class RTLController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('role:admin,GKM')->only(['create', 'store', 'edit', 'update', 'complete']);
-        $this->middleware('role:admin,GPM,dekan')->only(['verify']);
-    }
+   
 
     /**
      * Display a listing of RTLs.

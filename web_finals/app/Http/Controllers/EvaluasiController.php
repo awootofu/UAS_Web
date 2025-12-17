@@ -12,14 +12,11 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests; // <--- PERBAIKAN 1: Import Trait
 
 class EvaluasiController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('role:admin,kaprodi')->only(['create', 'store', 'edit', 'update']);
-        $this->middleware('role:admin,GPM,dekan')->only(['verify', 'approve', 'reject']);
-    }
+    use AuthorizesRequests; // <--- PERBAIKAN 2: Gunakan Trait di dalam class
 
     /**
      * Display a listing of evaluasi.

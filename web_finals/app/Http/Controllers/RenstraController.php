@@ -15,10 +15,7 @@ use Illuminate\Http\RedirectResponse;
 
 class RenstraController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('role:admin,BPAP')->except(['index', 'show']);
-    }
+   
 
     /**
      * Display a listing of renstra items.
