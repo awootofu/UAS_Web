@@ -132,6 +132,13 @@
                 <div class="p-6">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
                     <div class="flex flex-wrap gap-3">
+
+                        @can('verify-evaluasi')
+                        <a href="{{ route('verifications.index') }}" class="inline-flex items-center px-4 py-2 bg-purple-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-purple-700">
+                            Verifikasi
+                        </a>
+                        @endcan
+                        
                         @can('manage-renstra')
                         <a href="{{ route('renstra.create') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700">
                             + Tambah Renstra
@@ -149,6 +156,8 @@
                             + Buat RTL
                         </a>
                         @endcan
+
+                        
 
                         <a href="{{ route('renstra.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
                             Lihat Semua Renstra
