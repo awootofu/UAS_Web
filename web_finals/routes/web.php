@@ -8,6 +8,7 @@ use App\Http\Controllers\RTLController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\VerificationController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -79,3 +80,9 @@ Route::middleware(['auth', 'role:admin,dekan,gpm'])->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+// Verification routes - accessible by GPM, dekan
+Route::middleware(['auth', 'role:admin,GPM,dekan'])->group(function () {
+    Route::get('/verifications', [VerificationController::class, 'index'])->name('verifications.index');
+    Route::post('/verifications/{id}/update', [VerificationController::class, 'update'])->name('verifications.update');
+});   
