@@ -40,10 +40,10 @@
                             <select name="role" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                                 <option value="admin" {{ old('role', $user->role) == 'admin' ? 'selected' : '' }}>Admin</option>
                                 <option value="dekan" {{ old('role', $user->role) == 'dekan' ? 'selected' : '' }}>Dekan</option>
-                                <option value="gpm" {{ old('role', $user->role) == 'gpm' ? 'selected' : '' }}>GPM (Gugus Penjaminan Mutu)</option>
-                                <option value="gkm" {{ old('role', $user->role) == 'gkm' ? 'selected' : '' }}>GKM (Gugus Kendali Mutu)</option>
+                                <option value="GPM" {{ old('role', $user->role) == 'GPM' ? 'selected' : '' }}>GPM (Gugus Penjaminan Mutu)</option>
+                                <option value="GKM" {{ old('role', $user->role) == 'GKM' ? 'selected' : '' }}>GKM (Gugus Kendali Mutu)</option>
                                 <option value="kaprodi" {{ old('role', $user->role) == 'kaprodi' ? 'selected' : '' }}>Kaprodi</option>
-                                <option value="bpap" {{ old('role', $user->role) == 'bpap' ? 'selected' : '' }}>BPAP</option>
+                                <option value="BPAP" {{ old('role', $user->role) == 'BPAP' ? 'selected' : '' }}>BPAP</option>
                             </select>
                             @error('role') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
                         </div>

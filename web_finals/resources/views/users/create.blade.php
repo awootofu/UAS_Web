@@ -39,10 +39,10 @@
                                 <option value="">Pilih Role</option>
                                 <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
                                 <option value="dekan" {{ old('role') == 'dekan' ? 'selected' : '' }}>Dekan</option>
-                                <option value="gpm" {{ old('role') == 'gpm' ? 'selected' : '' }}>GPM (Gugus Penjaminan Mutu)</option>
-                                <option value="gkm" {{ old('role') == 'gkm' ? 'selected' : '' }}>GKM (Gugus Kendali Mutu)</option>
+                                <option value="GPM" {{ old('role') == 'GPM' ? 'selected' : '' }}>GPM (Gugus Penjaminan Mutu)</option>
+                                <option value="GKM" {{ old('role') == 'GKM' ? 'selected' : '' }}>GKM (Gugus Kendali Mutu)</option>
                                 <option value="kaprodi" {{ old('role') == 'kaprodi' ? 'selected' : '' }}>Kaprodi</option>
-                                <option value="bpap" {{ old('role') == 'bpap' ? 'selected' : '' }}>BPAP</option>
+                                <option value="BPAP" {{ old('role') == 'BPAP' ? 'selected' : '' }}>BPAP</option>
                             </select>
                             @error('role') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
                         </div>
