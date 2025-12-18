@@ -15,12 +15,12 @@ use App\Http\Controllers\TargetController;
 use Illuminate\Support\Facades\Route;
 
 
-Route::get('/', function () {
+/*Route::get('/', function () {
     return view('welcome');
-});
+});*/
 
 // Dashboard
-Route::get('/dashboard', [DashboardController::class, 'index'])
+Route::get('/', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
@@ -87,6 +87,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::middleware(['role:admin,gpm,dekan'])->group(function () {
         Route::post('/rtl/{rtl}/verify', [RTLController::class, 'verify'])->name('rtl.verify');
+        Route::post('/rtl/{rtl}/reject', [RTLController::class, 'reject'])->name('rtl.reject');
     });
 
     Route::get('/rtl', [RTLController::class, 'index'])->name('rtl.index');
@@ -105,11 +106,11 @@ Route::middleware(['auth', 'role:admin,dekan,gpm'])->group(function () {
     Route::get('/reports/renstra/pdf', [ReportController::class, 'exportPdf'])->name('reports.renstra.pdf');
 });
 
-require __DIR__.'/auth.php';
-
 // Verification routes - accessible by admin, GPM, dekan
 Route::middleware(['auth', 'role:admin,GPM,dekan'])->group(function () {
     Route::get('/verifications', [VerificationController::class, 'index'])->name('verifications.index');
-    Route::post('/verifications/{id}/update', [VerificationController::class, 'update'])->name('verifications.update');
-});   
+    Route::post('/verifications/{id}/verify', [VerificationController::class, 'verify'])->name('verifications.verify');
+    Route::post('/verifications/{id}/approve', [VerificationController::class, 'approve'])->name('verifications.approve');
+});
+
 require __DIR__.'/auth.php';

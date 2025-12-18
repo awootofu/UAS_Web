@@ -59,11 +59,23 @@ class Renstra extends Model
             $tahun = date('Y');
         }
 
-        // Count renstra for this year
-        $count = self::whereYear('created_at', $tahun)->count() + 1;
+        // Find the highest existing number for this year
+        $prefix = "RENS-{$tahun}-";
+        $lastCode = self::where('kode_renstra', 'like', $prefix . '%')
+            ->orderByRaw('CAST(SUBSTRING(kode_renstra, LENGTH(?) + 1) AS UNSIGNED) DESC', [$prefix])
+            ->value('kode_renstra');
+
+        if ($lastCode) {
+            // Extract the number from the last code and increment
+            $lastNumber = (int) substr($lastCode, strlen($prefix));
+            $newNumber = $lastNumber + 1;
+        } else {
+            // No existing codes for this year
+            $newNumber = 1;
+        }
 
         // Format: RENS-2025-001, RENS-2025-002, etc.
-        return sprintf('RENS-%d-%03d', $tahun, $count);
+        return sprintf('RENS-%d-%03d', $tahun, $newNumber);
     }
 
     /**

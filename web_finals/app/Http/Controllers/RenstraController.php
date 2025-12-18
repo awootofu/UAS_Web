@@ -114,6 +114,34 @@ class RenstraController extends Controller
             'keterangan' => 'nullable|string',
         ]);
 
+        // Auto-create kategori if not exist
+        $kategori = RenstraKategori::firstOrCreate(
+            ['nama_kategori' => $validated['kategori']],
+            ['kode_kategori' => 'KAT-' . date('YmdHis'), 'urutan' => RenstraKategori::max('urutan') + 1]
+        );
+        $validated['kategori_id'] = $kategori->id;
+        unset($validated['kategori']);
+
+        // Auto-create kegiatan if not exist (dengan kategori_id)
+        $kegiatan = RenstraKegiatan::firstOrCreate(
+            ['nama_kegiatan' => $validated['kegiatan'], 'kategori_id' => $kategori->id],
+            ['kode_kegiatan' => 'KEG-' . date('YmdHis'), 'urutan' => RenstraKegiatan::max('urutan') + 1]
+        );
+        $validated['kegiatan_id'] = $kegiatan->id;
+        unset($validated['kegiatan']);
+
+        // Auto-create indikator if not exist (dengan kegiatan_id)
+        $indikator = RenstraIndikator::firstOrCreate(
+            ['nama_indikator' => $validated['indikator'], 'kegiatan_id' => $kegiatan->id],
+            [
+                'kode_indikator' => 'IND-' . date('YmdHis'), 
+                'urutan' => RenstraIndikator::max('urutan') + 1,
+                'satuan' => '%'
+            ]
+        );
+        $validated['indikator_id'] = $indikator->id;
+        // Keep 'indikator' field for renstra table (it has both indikator text and indikator_id)
+
         $validated['user_id'] = auth()->id();
 
         $renstra = Renstra::create($validated);

@@ -82,8 +82,11 @@
                 <div class="p-6">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Aksi</h3>
                     <div class="flex flex-wrap gap-3">
-                        @if($rtl->canEdit() && (Auth::user()->isAdmin() || (Auth::user()->isGKM() && Auth::user()->prodi_id == $rtl->prodi_id)))
+                        @if(Auth::user()->isAdmin() || (Auth::user()->isGKM() && Auth::user()->prodi_id == $rtl->prodi_id))
+                        
+                        @if(in_array($rtl->status, ['pending', 'in_progress', 'rejected']))
                         <a href="{{ route('rtl.edit', $rtl) }}" class="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700">Edit</a>
+                        @endif
                         
                         @if($rtl->status == 'pending')
                         <form action="{{ route('rtl.start-progress', $rtl) }}" method="POST" class="inline">
@@ -92,7 +95,7 @@
                         </form>
                         @endif
 
-                        @if($rtl->canComplete())
+                        @if($rtl->status == 'in_progress' || $rtl->status == 'rejected')
                         <button onclick="document.getElementById('complete-modal').classList.remove('hidden')" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
                             Selesaikan RTL
                         </button>
@@ -101,10 +104,12 @@
 
                         @can('verify', $rtl)
                         @if($rtl->status == 'completed' && !$rtl->verified_at)
-                        <form action="{{ route('rtl.verify', $rtl) }}" method="POST" class="inline">
-                            @csrf
-                            <button type="submit" class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700">Verifikasi</button>
-                        </form>
+                        <button onclick="document.getElementById('verify-modal').classList.remove('hidden')" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                            Verify
+                        </button>
+                        <button onclick="document.getElementById('reject-modal').classList.remove('hidden')" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+                            Reject
+                        </button>
                         @endif
                         @endcan
                     </div>
@@ -132,6 +137,42 @@
                 <div class="flex justify-end gap-2">
                     <button type="button" onclick="document.getElementById('complete-modal').classList.add('hidden')" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md">Batal</button>
                     <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md">Selesaikan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Verify Modal -->
+    <div id="verify-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <h3 class="text-lg font-semibold mb-4">Verifikasi RTL</h3>
+            <form action="{{ route('rtl.verify', $rtl) }}" method="POST">
+                @csrf
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Catatan Verifikasi (Opsional)</label>
+                    <textarea name="verification_notes" rows="3" class="w-full rounded-md border-gray-300 shadow-sm" placeholder="Tambahkan catatan jika diperlukan..."></textarea>
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="document.getElementById('verify-modal').classList.add('hidden')" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md">Verifikasi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Reject Modal -->
+    <div id="reject-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <h3 class="text-lg font-semibold mb-4">Tolak RTL</h3>
+            <form action="{{ route('rtl.reject', $rtl) }}" method="POST">
+                @csrf
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Alasan Penolakan *</label>
+                    <textarea name="verification_notes" rows="3" required class="w-full rounded-md border-gray-300 shadow-sm" placeholder="Jelaskan alasan penolakan..."></textarea>
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="document.getElementById('reject-modal').classList.add('hidden')" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-md">Tolak</button>
                 </div>
             </form>
         </div>

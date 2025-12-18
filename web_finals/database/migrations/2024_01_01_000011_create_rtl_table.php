@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('pic_rtl'); // Person in charge
             $table->string('bukti_rtl')->nullable(); // Evidence file path
             
-            $table->enum('status', ['pending', 'in_progress', 'completed', 'overdue', 'cancelled'])->default('pending');
+            $table->enum('status', ['pending', 'in_progress', 'completed', 'verified', 'rejected', 'overdue', 'cancelled'])->default('pending');
             $table->text('keterangan')->nullable();
             
             // Audit trail

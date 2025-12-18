@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 /**
  * Controller for managing RTL (Rencana Tindak Lanjut / Follow-up Plan) resources.
@@ -24,6 +25,7 @@ use Illuminate\View\View;
  */
 class RTLController extends Controller
 {
+    use AuthorizesRequests;
    
 
     /**
@@ -76,11 +78,11 @@ class RTLController extends Controller
         $user = $request->user();
         $accessibleProdiIds = $user->getAccessibleProdiIds();
         
-        // Get evaluations that need RTL (failed to meet target) for accessible prodis
+        // Get evaluations that have been submitted by kaprodi
+        // Include submitted, verified, and approved evaluations
         $evaluasis = Evaluasi::with(['renstra', 'prodi'])
             ->whereIn('prodi_id', $accessibleProdiIds)
-            ->where('ketercapaian', '<', 100)
-            ->whereIn('status', ['verified', 'approved'])
+            ->whereIn('status', ['submitted', 'verified', 'approved'])
             ->get();
 
         $prodis = Prodi::whereIn('id', $accessibleProdiIds)->orderBy('nama_prodi')->get();
@@ -256,12 +258,17 @@ class RTLController extends Controller
     {
         $this->authorize('verify', $rtl);
         
+        if ($rtl->status !== 'completed') {
+            return back()->with('error', 'Hanya RTL yang sudah completed yang bisa diverifikasi.');
+        }
+
         $validated = $request->validate([
             'verification_notes' => 'nullable|string|max:1000',
         ]);
 
         $oldValues = $rtl->toArray();
         $rtl->update([
+            'status' => 'verified',
             'verified_by' => auth()->id(),
             'verified_at' => now(),
             'verification_notes' => $validated['verification_notes'] ?? null,
@@ -270,6 +277,34 @@ class RTLController extends Controller
         AuditLog::log('verified', RTL::class, $rtl->id, $oldValues, $rtl->fresh()->toArray());
 
         return back()->with('success', 'RTL berhasil diverifikasi.');
+    }
+
+    /**
+     * Reject RTL (GPM/Dekan role).
+     */
+    public function reject(Request $request, RTL $rtl): RedirectResponse
+    {
+        $this->authorize('verify', $rtl);
+        
+        if ($rtl->status !== 'completed') {
+            return back()->with('error', 'Hanya RTL yang sudah completed yang bisa ditolak.');
+        }
+
+        $validated = $request->validate([
+            'verification_notes' => 'required|string|max:1000',
+        ]);
+
+        $oldValues = $rtl->toArray();
+        $rtl->update([
+            'status' => 'rejected',
+            'verified_by' => auth()->id(),
+            'verified_at' => now(),
+            'verification_notes' => $validated['verification_notes'],
+        ]);
+
+        AuditLog::log('rejected', RTL::class, $rtl->id, $oldValues, $rtl->fresh()->toArray());
+
+        return back()->with('success', 'RTL berhasil ditolak. GKM perlu melakukan perbaikan.');
     }
 
     /**

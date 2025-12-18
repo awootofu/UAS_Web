@@ -18,7 +18,7 @@
                                     <option value="">Pilih Evaluasi</option>
                                     @foreach($evaluasis as $evaluasi)
                                     <option value="{{ $evaluasi->id }}" {{ old('evaluasi_id', request('evaluasi_id')) == $evaluasi->id ? 'selected' : '' }}>
-                                        {{ $evaluasi->renstra?->kode_renstra }} - {{ ucfirst($evaluasi->semester) }} {{ $evaluasi->tahun_evaluasi }} (Ketercapaian: {{ number_format($evaluasi->ketercapaian, 2) }}%)
+                                        {{ $evaluasi->renstra?->indikator ?? 'N/A' }} - {{ $evaluasi->prodi?->nama_prodi ?? 'Universitas' }} - {{ ucfirst($evaluasi->semester) }} {{ $evaluasi->tahun_evaluasi }} ({{ number_format($evaluasi->ketercapaian, 2) }}%)
                                     </option>
                                     @endforeach
                                 </select>
