@@ -70,14 +70,16 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/evaluasi/{evaluasi}/approve', [EvaluasiController::class, 'approve'])->name('evaluasi.approve');
     Route::patch('/evaluasi/{evaluasi}/reject', [EvaluasiController::class, 'reject'])->name('evaluasi.reject');
 
-    // View & Standard Resource
+    // View route
     Route::get('/evaluasi', [EvaluasiController::class, 'index'])->name('evaluasi.index');
-    Route::get('/evaluasi/{evaluasi}', [EvaluasiController::class, 'show'])->name('evaluasi.show');
     
     // Create/Store/Edit/Update/Destroy dibatasi Role
     Route::middleware(['role:admin,kaprodi,gpm,dekan'])->group(function () {
         Route::resource('evaluasi', EvaluasiController::class)->except(['index', 'show']);
     });
+    
+    // Show route - harus di bawah resource agar /evaluasi/create tidak tertangkap
+    Route::get('/evaluasi/{evaluasi}', [EvaluasiController::class, 'show'])->name('evaluasi.show');
 });
 
 // =========================================================================
