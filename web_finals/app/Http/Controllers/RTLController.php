@@ -24,6 +24,8 @@ use Illuminate\View\View;
  */
 class RTLController extends Controller
 {
+   
+
     /**
      * Display a listing of RTLs.
      */

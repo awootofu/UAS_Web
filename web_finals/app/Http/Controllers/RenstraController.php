@@ -25,6 +25,8 @@ use Illuminate\Http\RedirectResponse;
  */
 class RenstraController extends Controller
 {
+   
+
     /**
      * Display a listing of renstra items.
      */

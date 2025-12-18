@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests; // <--- PERBAIKAN 1: Import Trait
 
 /**
  * Controller for managing Evaluasi (Evaluation) resources.
@@ -28,6 +29,8 @@ use Illuminate\View\View;
  */
 class EvaluasiController extends Controller
 {
+    use AuthorizesRequests; // <--- PERBAIKAN 2: Gunakan Trait di dalam class
+
     /**
      * Display a listing of evaluasi.
      */

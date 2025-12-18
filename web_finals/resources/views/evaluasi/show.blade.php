@@ -1,188 +1,200 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Detail Evaluasi
-        </h2>
+        <div class="flex justify-between items-center">
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                {{ __('Detail Evaluasi') }}
+            </h2>
+            <a href="{{ route('evaluasi.index') }}" class="px-4 py-2 bg-gray-500 text-white rounded-md text-xs font-semibold uppercase hover:bg-gray-600 transition">
+                &larr; Kembali
+            </a>
+        </div>
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-            @if(session('success'))
-            <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">{{ session('success') }}</div>
-            @endif
-            @if(session('error'))
-            <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">{{ session('error') }}</div>
-            @endif
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
-            <!-- Main Info -->
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
-                <div class="p-6">
-                    <div class="flex justify-between items-start mb-6">
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex justify-between items-start">
                         <div>
-                            <h3 class="text-lg font-semibold text-gray-900">{{ $evaluasi->renstra?->kode_renstra }}</h3>
-                            <p class="text-gray-500">{{ $evaluasi->renstra?->indikator }}</p>
+                            <h3 class="text-lg font-bold text-gray-900">
+                                {{ $evaluasi->renstra->kode ?? 'RENSTRA' }}
+                            </h3>
+                            <p class="text-sm text-gray-600 mt-1 max-w-2xl">
+                                {{ $evaluasi->renstra->deskripsi ?? 'Deskripsi Renstra' }}
+                            </p>
+                            <div class="mt-4 flex gap-6 text-sm">
+                                <div>
+                                    <span class="block text-gray-500 text-xs uppercase">Prodi</span>
+                                    <span class="font-medium">{{ $evaluasi->prodi->nama_prodi ?? '-' }}</span>
+                                </div>
+                                <div>
+                                    <span class="block text-gray-500 text-xs uppercase">Periode</span>
+                                    <span class="font-medium">{{ ucfirst($evaluasi->semester) }} {{ $evaluasi->tahun_evaluasi }}</span>
+                                </div>
+                                <div>
+                                    <span class="block text-gray-500 text-xs uppercase">Target</span>
+                                    <span class="font-medium">{{ $evaluasi->target->nilai_target ?? 0 }}</span>
+                                </div>
+                            </div>
                         </div>
-                        <span class="px-3 py-1 text-sm rounded-full 
-                            @if($evaluasi->status == 'approved') bg-green-100 text-green-800
-                            @elseif($evaluasi->status == 'verified') bg-blue-100 text-blue-800
-                            @elseif($evaluasi->status == 'submitted') bg-yellow-100 text-yellow-800
-                            @elseif($evaluasi->status == 'rejected') bg-red-100 text-red-800
-                            @else bg-gray-100 text-gray-800 @endif">
-                            {{ ucfirst($evaluasi->status) }}
-                        </span>
-                    </div>
-
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                        <div>
-                            <h4 class="text-sm font-medium text-gray-500">Prodi</h4>
-                            <p class="mt-1 text-gray-900">{{ $evaluasi->prodi?->nama_prodi }}</p>
-                        </div>
-                        <div>
-                            <h4 class="text-sm font-medium text-gray-500">Periode</h4>
-                            <p class="mt-1 text-gray-900">{{ ucfirst($evaluasi->semester) }} {{ $evaluasi->tahun_evaluasi }}</p>
-                        </div>
-                        <div>
-                            <h4 class="text-sm font-medium text-gray-500">Realisasi</h4>
-                            <p class="mt-1 text-gray-900">{{ number_format($evaluasi->realisasi, 2) }}</p>
-                        </div>
-                        <div>
-                            <h4 class="text-sm font-medium text-gray-500">Ketercapaian</h4>
-                            <span class="mt-1 px-2 py-1 text-sm rounded-full {{ $evaluasi->ketercapaian >= 100 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                {{ number_format($evaluasi->ketercapaian, 2) }}%
+                        <div class="flex flex-col items-end gap-2">
+                            <span class="px-3 py-1 rounded-full text-sm font-semibold 
+                                @if($evaluasi->status == 'approved') bg-green-100 text-green-800
+                                @elseif($evaluasi->status == 'verified') bg-blue-100 text-blue-800
+                                @elseif($evaluasi->status == 'submitted') bg-yellow-100 text-yellow-800
+                                @elseif($evaluasi->status == 'rejected') bg-red-100 text-red-800
+                                @else bg-gray-100 text-gray-800 @endif">
+                                {{ ucfirst($evaluasi->status) }}
+                            </span>
+                            <span class="text-xs text-gray-400">
+                                Dibuat: {{ $evaluasi->created_at->format('d M Y') }}
                             </span>
                         </div>
                     </div>
-
-                    @if($evaluasi->faktor_pendukung)
-                    <div class="mb-4">
-                        <h4 class="text-sm font-medium text-gray-500">Faktor Pendukung</h4>
-                        <p class="mt-1 text-gray-900">{{ $evaluasi->faktor_pendukung }}</p>
-                    </div>
-                    @endif
-
-                    @if($evaluasi->akar_masalah)
-                    <div class="mb-4">
-                        <h4 class="text-sm font-medium text-gray-500">Akar Masalah</h4>
-                        <p class="mt-1 text-gray-900">{{ $evaluasi->akar_masalah }}</p>
-                    </div>
-                    @endif
-
-                    @if($evaluasi->faktor_penghambat)
-                    <div class="mb-4">
-                        <h4 class="text-sm font-medium text-gray-500">Faktor Penghambat</h4>
-                        <p class="mt-1 text-gray-900">{{ $evaluasi->faktor_penghambat }}</p>
-                    </div>
-                    @endif
-
-                    @if($evaluasi->bukti)
-                    <div class="mb-4">
-                        <h4 class="text-sm font-medium text-gray-500">Bukti/Evidence</h4>
-                        <a href="{{ Storage::url($evaluasi->bukti->file_path) }}" target="_blank" class="mt-1 inline-flex items-center text-indigo-600 hover:text-indigo-800">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                            {{ $evaluasi->bukti->nama_file }} ({{ $evaluasi->bukti->formatted_size }})
-                        </a>
-                    </div>
-                    @endif
-
-                    <div class="pt-4 border-t border-gray-200 text-sm text-gray-500">
-                        <p>Dibuat oleh: {{ $evaluasi->creator?->name }} pada {{ $evaluasi->created_at->format('d M Y H:i') }}</p>
-                        @if($evaluasi->verifier)
-                        <p>Diverifikasi oleh: {{ $evaluasi->verifier->name }} pada {{ $evaluasi->verified_at?->format('d M Y H:i') }}</p>
-                        @endif
-                        @if($evaluasi->approver)
-                        <p>Diapprove oleh: {{ $evaluasi->approver->name }} pada {{ $evaluasi->approved_at?->format('d M Y H:i') }}</p>
-                        @endif
-                    </div>
                 </div>
             </div>
 
-            <!-- Action Buttons -->
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
-                <div class="p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Aksi</h3>
-                    <div class="flex flex-wrap gap-3">
-                        @if($evaluasi->canEdit() && (Auth::user()->isAdmin() || (Auth::user()->isKaprodi() && Auth::user()->prodi_id == $evaluasi->prodi_id)))
-                        <a href="{{ route('evaluasi.edit', $evaluasi) }}" class="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700">Edit</a>
-                        <form action="{{ route('evaluasi.submit', $evaluasi) }}" method="POST" class="inline">
-                            @csrf
-                            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Submit untuk Verifikasi</button>
-                        </form>
-                        @endif
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="md:col-span-1 space-y-6">
+                    <div class="bg-white shadow-sm sm:rounded-lg p-6">
+                        <h4 class="font-semibold text-gray-800 mb-4 border-b pb-2">Capaian</h4>
+                        
+                        <div class="mb-4">
+                            <span class="block text-gray-500 text-xs uppercase">Realisasi</span>
+                            <span class="text-2xl font-bold text-gray-900">{{ number_format($evaluasi->realisasi, 2) }}</span>
+                        </div>
 
-                        @can('verify', $evaluasi)
-                        @if($evaluasi->canVerify())
-                        <form action="{{ route('evaluasi.verify', $evaluasi) }}" method="POST" class="inline">
-                            @csrf
-                            <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Verifikasi</button>
-                        </form>
-                        <button onclick="document.getElementById('reject-modal').classList.remove('hidden')" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">Tolak</button>
-                        @endif
-                        @endcan
-
-                        @can('approve', $evaluasi)
-                        @if($evaluasi->canApprove())
-                        <form action="{{ route('evaluasi.approve', $evaluasi) }}" method="POST" class="inline">
-                            @csrf
-                            <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Approve</button>
-                        </form>
-                        @endif
-                        @endcan
-                    </div>
-                </div>
-            </div>
-
-            <!-- RTL Section -->
-            @if(!$evaluasi->isAchieved())
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
-                <div class="p-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-semibold text-gray-900">Rencana Tindak Lanjut (RTL)</h3>
-                        @can('gkm')
-                        <a href="{{ route('rtl.create', ['evaluasi_id' => $evaluasi->id]) }}" class="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700">+ Buat RTL</a>
-                        @endcan
-                    </div>
-                    @if($evaluasi->rtls->count() > 0)
-                    <div class="space-y-3">
-                        @foreach($evaluasi->rtls as $rtl)
-                        <div class="p-3 bg-gray-50 rounded-lg">
-                            <div class="flex justify-between">
-                                <div>
-                                    <p class="font-medium">{{ Str::limit($rtl->rtl, 100) }}</p>
-                                    <p class="text-sm text-gray-500">PIC: {{ $rtl->pic_rtl }} | Deadline: {{ $rtl->deadline->format('d M Y') }}</p>
-                                </div>
-                                <span class="px-2 py-1 text-xs rounded-full 
-                                    @if($rtl->status == 'completed') bg-green-100 text-green-800
-                                    @elseif($rtl->isOverdue()) bg-red-100 text-red-800
-                                    @else bg-yellow-100 text-yellow-800 @endif">
-                                    {{ $rtl->isOverdue() ? 'Overdue' : ucfirst(str_replace('_', ' ', $rtl->status)) }}
+                        <div>
+                            <span class="block text-gray-500 text-xs uppercase">Persentase</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-2xl font-bold {{ $evaluasi->ketercapaian >= 100 ? 'text-green-600' : 'text-red-600' }}">
+                                    {{ number_format($evaluasi->ketercapaian, 2) }}%
                                 </span>
                             </div>
                         </div>
-                        @endforeach
                     </div>
-                    @else
-                    <p class="text-gray-500 text-sm">Belum ada RTL untuk evaluasi ini.</p>
-                    @endif
+
+                    <div class="bg-white shadow-sm sm:rounded-lg p-6">
+                        <h4 class="font-semibold text-gray-800 mb-4 border-b pb-2">Bukti Dukung</h4>
+                        @if($evaluasi->bukti)
+                            <a href="{{ Storage::url($evaluasi->bukti->file_path) }}" target="_blank" class="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 transition group">
+                                <div class="bg-blue-100 p-2 rounded text-blue-600 group-hover:bg-blue-200">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                </div>
+                                <div class="overflow-hidden">
+                                    <p class="text-sm font-medium text-gray-900 truncate">{{ $evaluasi->bukti->nama_file }}</p>
+                                    <p class="text-xs text-gray-500">Klik untuk unduh</p>
+                                </div>
+                            </a>
+                        @else
+                            <p class="text-sm text-gray-500 italic">Tidak ada bukti diupload.</p>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="md:col-span-2 bg-white shadow-sm sm:rounded-lg p-6">
+                    <h4 class="font-semibold text-gray-800 mb-4 border-b pb-2">Analisis Evaluasi</h4>
+                    
+                    <div class="space-y-6">
+                        @if($evaluasi->faktor_pendukung)
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Faktor Pendukung</label>
+                            <div class="bg-green-50 p-3 rounded-md text-sm text-gray-800 border-l-4 border-green-400">
+                                {{ $evaluasi->faktor_pendukung }}
+                            </div>
+                        </div>
+                        @endif
+
+                        @if($evaluasi->akar_masalah)
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Akar Masalah</label>
+                            <div class="bg-red-50 p-3 rounded-md text-sm text-gray-800 border-l-4 border-red-400">
+                                {{ $evaluasi->akar_masalah }}
+                            </div>
+                        </div>
+                        @endif
+
+                        @if($evaluasi->faktor_penghambat)
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Faktor Penghambat & Solusi</label>
+                            <div class="bg-gray-50 p-3 rounded-md text-sm text-gray-800 border-l-4 border-gray-400">
+                                {{ $evaluasi->faktor_penghambat }}
+                            </div>
+                        </div>
+                        @endif
+
+                        @if(!$evaluasi->faktor_pendukung && !$evaluasi->akar_masalah && !$evaluasi->faktor_penghambat)
+                            <p class="text-gray-400 italic text-sm">Belum ada analisis yang diisi.</p>
+                        @endif
+                    </div>
                 </div>
             </div>
-            @endif
 
-            <a href="{{ route('evaluasi.index') }}" class="text-indigo-600 hover:text-indigo-800">&larr; Kembali ke Daftar Evaluasi</a>
-        </div>
-    </div>
+            <div class="bg-white shadow-sm sm:rounded-lg p-6">
+                <h4 class="font-semibold text-gray-800 mb-4 border-b pb-2">Aksi Dokumen</h4>
+                <div class="flex flex-wrap gap-3">
+                    
+                    {{-- TOMBOL EDIT (Hanya jika Draft/Rejected) --}}
+                    @if($evaluasi->canEdit())
+                        <a href="{{ route('evaluasi.edit', $evaluasi->id) }}" class="inline-flex items-center px-4 py-2 bg-yellow-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-yellow-600 focus:outline-none focus:border-yellow-700 focus:ring ring-yellow-300 disabled:opacity-25 transition">
+                            Edit Data
+                        </a>
+                    @endif
 
-    <!-- Reject Modal -->
-    <div id="reject-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <h3 class="text-lg font-semibold mb-4">Tolak Evaluasi</h3>
-            <form action="{{ route('evaluasi.reject', $evaluasi) }}" method="POST">
-                @csrf
-                <textarea name="rejection_notes" rows="4" required placeholder="Alasan penolakan..." class="w-full rounded-md border-gray-300 shadow-sm"></textarea>
-                <div class="mt-4 flex justify-end gap-2">
-                    <button type="button" onclick="document.getElementById('reject-modal').classList.add('hidden')" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md">Batal</button>
-                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-md">Tolak</button>
+                    {{-- TOMBOL SUBMIT (Hanya jika Draft/Rejected) --}}
+                    @if(in_array($evaluasi->status, ['draft', 'rejected']))
+                        <form action="{{ route('evaluasi.submit', $evaluasi->id) }}" method="POST">
+                            @csrf
+                            <button type="submit" onclick="return confirm('Apakah Anda yakin ingin mensubmit data ini? Data tidak bisa diedit setelah disubmit.')" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:outline-none focus:border-blue-900 focus:ring ring-blue-300 disabled:opacity-25 transition">
+                                Submit untuk Verifikasi
+                            </button>
+                        </form>
+                    @endif
+
+                    {{-- TOMBOL VERIFIKASI (Hanya jika Submitted & User GPM/Admin) --}}
+                    @if($evaluasi->status == 'submitted' && (Auth::user()->isGPM() || Auth::user()->isAdmin()))
+                        <form action="{{ route('evaluasi.verify', $evaluasi->id) }}" method="POST">
+                            @csrf
+                            @method('PATCH') {{-- PERBAIKAN UTAMA ADA DI SINI --}}
+                            <button type="submit" onclick="return confirm('Verifikasi data ini?')" class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:outline-none focus:border-green-900 focus:ring ring-green-300 disabled:opacity-25 transition">
+                                Verifikasi
+                            </button>
+                        </form>
+
+                        <button type="button" onclick="document.getElementById('rejectForm').classList.remove('hidden')" class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 focus:outline-none focus:border-red-900 focus:ring ring-red-300 disabled:opacity-25 transition">
+                            Tolak / Revisi
+                        </button>
+                    @endif
+
+                    {{-- TOMBOL APPROVE (Hanya jika Verified & User Dekan/Admin) --}}
+                    @if($evaluasi->status == 'verified' && (Auth::user()->isDekan() || Auth::user()->isAdmin()))
+                        <form action="{{ route('evaluasi.approve', $evaluasi->id) }}" method="POST">
+                            @csrf
+                            @method('PATCH')
+                            <button type="submit" onclick="return confirm('Approve data ini?')" class="inline-flex items-center px-4 py-2 bg-green-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-900 focus:outline-none focus:border-green-900 focus:ring ring-green-300 disabled:opacity-25 transition">
+                                Approve (Final)
+                            </button>
+                        </form>
+                    @endif
+
                 </div>
-            </form>
+
+                {{-- Form Hidden untuk Reject (Muncul jika tombol Tolak diklik) --}}
+                <div id="rejectForm" class="hidden mt-4 p-4 border border-red-200 bg-red-50 rounded-md">
+                    <form action="{{ route('evaluasi.reject', $evaluasi->id) }}" method="POST">
+                        @csrf
+                        @method('PATCH')
+                        <label class="block font-medium text-sm text-red-700 mb-2">Alasan Penolakan / Catatan Revisi:</label>
+                        <textarea name="rejection_notes" rows="3" class="w-full rounded-md border-red-300 shadow-sm focus:border-red-500 focus:ring-red-500" required></textarea>
+                        <div class="mt-3 flex gap-2">
+                            <button type="submit" class="px-4 py-2 bg-red-600 text-white text-xs font-bold uppercase rounded hover:bg-red-700">Kirim Penolakan</button>
+                            <button type="button" onclick="document.getElementById('rejectForm').classList.add('hidden')" class="px-4 py-2 bg-gray-300 text-gray-700 text-xs font-bold uppercase rounded hover:bg-gray-400">Batal</button>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
         </div>
     </div>
 </x-app-layout>
