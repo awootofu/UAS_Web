@@ -10,8 +10,10 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\KategoriController;
 use App\Http\Controllers\KegiatanController;
 use App\Http\Controllers\IndikatorController;
+use App\Http\Controllers\VerificationController;
 use App\Http\Controllers\TargetController;
 use Illuminate\Support\Facades\Route;
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -103,4 +105,11 @@ Route::middleware(['auth', 'role:admin,dekan,gpm'])->group(function () {
     Route::get('/reports/renstra/pdf', [ReportController::class, 'exportPdf'])->name('reports.renstra.pdf');
 });
 
+require __DIR__.'/auth.php';
+
+// Verification routes - accessible by GPM, dekan
+Route::middleware(['auth', 'role:admin,GPM,dekan'])->group(function () {
+    Route::get('/verifications', [VerificationController::class, 'index'])->name('verifications.index');
+    Route::post('/verifications/{id}/update', [VerificationController::class, 'update'])->name('verifications.update');
+});   
 require __DIR__.'/auth.php';

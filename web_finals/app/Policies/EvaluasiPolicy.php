@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Models\Evaluasi;
+use App\Models\Submission;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
@@ -72,15 +73,11 @@ class EvaluasiPolicy
     /**
      * Determine whether the user can verify the model.
      */
-    public function verify(User $user, Evaluasi $evaluasi): bool
+    public function verify(User $user): bool
     {
-        // GPM can verify submitted evaluations
-        if ($user->isGPM() && $evaluasi->canVerify()) {
-            return true;
-        }
-
-        // Admin can also verify
-        return $user->isAdmin();
+        // Cek role user yang diperbolehkan
+        // Role di database harus sesuai (huruf kecil/besar)
+        return in_array($user->role, ['admin', 'dekan', 'GPM']);
     }
 
     /**
