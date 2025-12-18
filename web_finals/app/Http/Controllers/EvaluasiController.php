@@ -306,17 +306,28 @@ class EvaluasiController extends Controller
      */
     public function reject(Request $request, Evaluasi $evaluasi): RedirectResponse
     {
-        $this->authorize('verify', $evaluasi);
+        $this->authorize('reject', $evaluasi);
         
         $validated = $request->validate([
             'rejection_notes' => 'required|string|max:1000',
         ]);
 
         $oldValues = $evaluasi->toArray();
-        $evaluasi->update([
+        
+        $updateData = [
             'status' => 'rejected',
-            'verification_notes' => $validated['rejection_notes'],
-        ]);
+        ];
+        
+        if ($evaluasi->status === 'submitted') {
+            $updateData['verification_notes'] = $validated['rejection_notes'];
+        } elseif ($evaluasi->status === 'verified') {
+            $updateData['approval_notes'] = $validated['rejection_notes'];
+            // Optionally reset approval fields
+            $updateData['approved_by'] = null;
+            $updateData['approved_at'] = null;
+        }
+        
+        $evaluasi->update($updateData);
 
         AuditLog::log('rejected', Evaluasi::class, $evaluasi->id, $oldValues, $evaluasi->fresh()->toArray());
 

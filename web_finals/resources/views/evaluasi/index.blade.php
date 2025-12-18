@@ -4,7 +4,7 @@
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 {{ __('Daftar Evaluasi') }}
             </h2>
-            @can('kaprodi')
+            @can('create', App\Models\Evaluasi::class)
             <a href="{{ route('evaluasi.create') }}" class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700">
                 + Input Evaluasi
             </a>
