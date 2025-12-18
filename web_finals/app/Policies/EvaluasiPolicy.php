@@ -73,11 +73,10 @@ class EvaluasiPolicy
     /**
      * Determine whether the user can verify the model.
      */
-    public function verify(User $user): bool
+    public function verify(User $user, Evaluasi $evaluasi): bool
     {
-        // Cek role user yang diperbolehkan
-        // Role di database harus sesuai (huruf kecil/besar)
-        return in_array($user->role, ['admin', 'dekan', 'GPM']);
+        // Admin, Dekan, and GPM can verify submitted evaluations
+        return $user->hasRole([User::ROLE_ADMIN, User::ROLE_DEKAN, User::ROLE_GPM]) && $evaluasi->status === 'submitted';
     }
 
     /**
@@ -92,6 +91,15 @@ class EvaluasiPolicy
 
         // Admin can also approve
         return $user->isAdmin();
+    }
+
+    /**
+     * Determine whether the user can reject the model.
+     */
+    public function reject(User $user, Evaluasi $evaluasi): bool
+    {
+        // Admin, Dekan, and GPM can reject submitted or verified evaluations
+        return $user->hasRole([User::ROLE_ADMIN, User::ROLE_DEKAN, User::ROLE_GPM]) && in_array($evaluasi->status, ['submitted', 'verified']);
     }
 
     /**

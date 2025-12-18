@@ -5,9 +5,11 @@ namespace App\Providers;
 use App\Models\Evaluasi;
 use App\Models\Renstra;
 use App\Models\RTL;
+use App\Models\Submission;
 use App\Policies\EvaluasiPolicy;
 use App\Policies\RenstraPolicy;
 use App\Policies\RTLPolicy;
+use App\Policies\SubmissionPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -30,6 +32,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Renstra::class, RenstraPolicy::class);
         Gate::policy(Evaluasi::class, EvaluasiPolicy::class);
         Gate::policy(RTL::class, RTLPolicy::class);
+        Gate::policy(Submission::class, SubmissionPolicy::class);
 
         // Define gates for role-based access
         Gate::define('admin', fn ($user) => $user->isAdmin());

@@ -152,8 +152,8 @@
                         </form>
                     @endif
 
-                    {{-- TOMBOL VERIFIKASI (Hanya jika Submitted & User GPM/Admin) --}}
-                    @if($evaluasi->status == 'submitted' && (Auth::user()->isGPM() || Auth::user()->isAdmin()))
+                    {{-- TOMBOL VERIFIKASI (Hanya jika Submitted & User Dekan/GPM/Admin) --}}
+                    @if($evaluasi->status == 'submitted' && (Auth::user()->isDekan() || Auth::user()->isGPM() || Auth::user()->isAdmin()))
                         <form action="{{ route('evaluasi.verify', $evaluasi->id) }}" method="POST">
                             @csrf
                             @method('PATCH') {{-- PERBAIKAN UTAMA ADA DI SINI --}}
@@ -176,6 +176,10 @@
                                 Approve (Final)
                             </button>
                         </form>
+
+                        <button type="button" onclick="document.getElementById('rejectForm').classList.remove('hidden')" class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 focus:outline-none focus:border-red-900 focus:ring ring-red-300 disabled:opacity-25 transition">
+                            Tolak / Revisi
+                        </button>
                     @endif
 
                 </div>

@@ -6,9 +6,11 @@ use Illuminate\Http\Request;
 use App\Models\Submission;
 use Illuminate\Support\Facades\Auth; // buat ambil ID user login
 use Carbon\Carbon; // buat ambil timestamp
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests; // Import Trait
 
 class VerificationController extends Controller
 {
+    use AuthorizesRequests; // Gunakan Trait di dalam class
     public function index()
     {
         // tampilin status 'pending' di paling atas
